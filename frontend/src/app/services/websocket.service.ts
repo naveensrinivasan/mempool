@@ -251,6 +251,10 @@ export class WebsocketService {
       this.stateService.bsqPrice$.next(response['bsq-price']);
     }
 
+    if (response.utxoSpent) {
+      this.stateService.utxoSpent$.next(response.utxoSpent);
+    }
+
     if (response.backendInfo) {
       this.stateService.backendInfo$.next(response.backendInfo);
 

@@ -331,21 +331,37 @@ class WebsocketHandler {
         }
       }
 
-      if (client['track-tx'] && rbfTransactions[client['track-tx']]) {
-        for (const rbfTransaction in rbfTransactions) {
-          if (client['track-tx'] === rbfTransaction) {
-            const rbfTx = rbfTransactions[rbfTransaction];
-            if (config.MEMPOOL.BACKEND !== 'esplora') {
-              try {
-                const fullTx = await transactionUtils.$getTransactionExtended(rbfTransaction, true);
-                response['rbfTransaction'] = fullTx;
-              } catch (e) {
-                logger.debug('Error finding transaction in mempool: ' + (e instanceof Error ? e.message : e));
+      if (client['track-tx']) {
+        const outspends: object = {};
+        newTransactions.forEach((tx) => tx.vin.forEach((vin, i) => {
+          if (vin.txid === client['track-tx']) {
+            outspends[vin.vout] = {
+              vin: i,
+              txid: tx.txid,
+            };
+          }
+        }));
+
+        if (Object.keys(outspends).length) {
+          response['utxoSpent'] = outspends;
+        }
+
+        if (rbfTransactions[client['track-tx']]) {
+          for (const rbfTransaction in rbfTransactions) {
+            if (client['track-tx'] === rbfTransaction) {
+              const rbfTx = rbfTransactions[rbfTransaction];
+              if (config.MEMPOOL.BACKEND !== 'esplora') {
+                try {
+                  const fullTx = await transactionUtils.$getTransactionExtended(rbfTransaction, true);
+                  response['rbfTransaction'] = fullTx;
+                } catch (e) {
+                  logger.debug('Error finding transaction in mempool: ' + (e instanceof Error ? e.message : e));
+                }
+              } else {
+                response['rbfTransaction'] = rbfTx;
               }
-            } else {
-              response['rbfTransaction'] = rbfTx;
+              break;
             }
-            break;
           }
         }
       }
@@ -405,7 +421,6 @@ class WebsocketHandler {
       }
 
       if (client['track-tx'] && txIds.indexOf(client['track-tx']) > -1) {
-        client['track-tx'] = null;
         response['txConfirmed'] = true;
       }
 

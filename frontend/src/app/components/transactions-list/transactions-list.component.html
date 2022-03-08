@@ -76,16 +76,19 @@
                 </td>
                 <td class="text-right nowrap amount">
                   <ng-template [ngIf]="vin.prevout && vin.prevout.asset && vin.prevout.asset !== nativeAssetId" [ngIfElse]="defaultOutput">
-                    <div *ngIf="assetsMinimal && assetsMinimal[vin.prevout.asset]">
+                    <div *ngIf="assetsMinimal && assetsMinimal[vin.prevout.asset] else assetVinNotFound">
                       <ng-container *ngTemplateOutlet="assetBox; context:{ $implicit: vin.prevout }"></ng-container>
                     </div>
+                    <ng-template #assetVinNotFound>
+                      {{ vin.prevout.value }} <a [routerLink]="['/assets/asset/' | relativeUrl, vin.prevout.asset]">{{ vin.prevout.asset | slice : 0 : 7 }}</a>
+                    </ng-template>
                   </ng-template>
                   <ng-template #defaultOutput>
                     <app-amount *ngIf="vin.prevout" [satoshis]="vin.prevout.value"></app-amount>
                   </ng-template>
                 </td>
               </tr>
-              <tr *ngIf="displayDetails">
+              <tr *ngIf="(showDetails$ | async) === true">
                 <td colspan="3" class="details-container" >
                   <table class="table table-striped table-borderless details-table mb-3">
                     <tbody>
@@ -210,7 +213,7 @@
                   </ng-template>
                 </td>
               </tr>
-              <tr *ngIf="displayDetails">
+              <tr *ngIf="(showDetails$ | async) === true">
                 <td colspan="3" class=" details-container" >
                   <table class="table table-striped table-borderless details-table mb-3">
                     <tbody>
